@@ -1,0 +1,10 @@
+# CONFIG DB
+user="root"
+password=""
+host="localhost"
+port="3306"
+dbname="news"
+
+# BASIC AUTH
+usr="usr"
+pwd="pwd"
