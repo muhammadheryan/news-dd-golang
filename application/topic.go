@@ -1,14 +1,31 @@
 package application
 
 import (
+	"encoding/json"
+	"fmt"
 	"news-dd/config"
 	"news-dd/domain"
+	"news-dd/infrastructure/helper"
 	"news-dd/infrastructure/persistence"
 	"time"
 )
 
 // GetTopic returns a topic by id
 func GetTopic(id int) (*domain.Topic, error) {
+	client := config.ConnectRedis()
+	redisKey := fmt.Sprintf("topic:%d", id)
+	defer client.Close()
+
+	resultRedis, err := client.Get(redisKey).Result()
+	if err == nil {
+		var result *domain.Topic
+		json.Unmarshal([]byte(resultRedis), &result)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
+	}
+
 	conn, err := config.ConnectDB()
 	if err != nil {
 		return nil, err
@@ -16,7 +33,12 @@ func GetTopic(id int) (*domain.Topic, error) {
 	defer conn.Close()
 
 	repo := persistence.NewTopicRepositoryWithRDB(conn)
-	return repo.Get(id)
+	result, err := repo.Get(id)
+
+	redisValue := helper.StructToJson(result)
+	client.Set(redisKey, redisValue, time.Hour*12)
+
+	return result, err
 }
 
 // GetAllTopic return all topics
@@ -49,6 +71,10 @@ func AddTopic(topic string) error {
 
 // RemoveTopic do remove topic by id
 func RemoveTopic(id int) error {
+	client := config.ConnectRedis()
+	redisKey := fmt.Sprintf("topic:%d", id)
+	defer client.Close()
+
 	conn, err := config.ConnectDB()
 	if err != nil {
 		return err
@@ -56,11 +82,19 @@ func RemoveTopic(id int) error {
 	defer conn.Close()
 
 	repo := persistence.NewTopicRepositoryWithRDB(conn)
-	return repo.Remove(id)
+	err = repo.Remove(id)
+	if err == nil {
+		client.Del(redisKey)
+	}
+	return err
 }
 
 // UpdateTopic do update topic by id
 func UpdateTopic(p domain.Topic, id int) error {
+	client := config.ConnectRedis()
+	redisKey := fmt.Sprintf("topic:%d", id)
+	defer client.Close()
+
 	conn, err := config.ConnectDB()
 	if err != nil {
 		return err
@@ -69,6 +103,10 @@ func UpdateTopic(p domain.Topic, id int) error {
 
 	repo := persistence.NewTopicRepositoryWithRDB(conn)
 	p.Id = id
+	err = repo.Update(&p)
+	if err == nil {
+		client.Del(redisKey)
+	}
 
-	return repo.Update(&p)
+	return err
 }

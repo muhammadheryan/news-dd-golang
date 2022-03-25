@@ -30,30 +30,6 @@ func GetAllNews(topicId int, status string) ([]domain.News, error) {
 	return repo.GetAll(topicId, status)
 }
 
-//// GetAllNewsByFilter return all domain.news by filter
-//func GetAllNewsByFilter(status string) ([]domain.News, error) {
-//	conn, err := config.ConnectDB()
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer conn.Close()
-//
-//	repo := persistence.NewNewsRepositoryWithRDB(conn)
-//	return repo.GetByStatus(status)
-//}
-//
-//// GetNewsByTopic returns []domain.news
-//func GetNewsByTopic(topic string) ([]domain.News, error) {
-//	conn, err := config.ConnectDB()
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer conn.Close()
-//
-//	repo := persistence.NewNewsRepositoryWithRDB(conn)
-//	return repo.GetByTopic(topic)
-//}
-
 // AddNews saves new news
 func AddNews(p domain.News) error {
 	conn, err := config.ConnectDB()

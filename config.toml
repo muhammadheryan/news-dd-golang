@@ -8,3 +8,8 @@ dbname="news"
 # BASIC AUTH
 usr="usr"
 pwd="pwd"
+
+# CONFIG REDIS
+redisaddr="localhost:6379"
+Redispassword=""
+Redisdb=0
